@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --experimental-modules index.js"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -16,7 +16,6 @@
   "bugs": {
     "url": "https://github.com/amloelxer/nr-grapql-env-repro/issues"
   },
-  "type": "module",
   "homepage": "https://github.com/amloelxer/nr-grapql-env-repro#readme",
   "dependencies": {
     "@newrelic/apollo-server-plugin": "^0.3.0",
@@ -33,11 +32,11 @@
     "express-https-redirect": "^1.0.0",
     "express-session": "^1.15.6",
     "express-useragent": "^1.0.13",
+    "graphql": "^14.5.4",
     "graphql-compose-elasticsearch": "^2.2.2",
     "graphql-playground-middleware-express": "^1.7.22",
     "graphql-subscriptions": "^1.1.0",
     "graphql-tools": "^4.0.5",
-    "graphql-type-json": "^0.3.2",
     "helmet": "^3.12.1",
     "newrelic": "^6.7.0",
     "throng": "^5.0.0"

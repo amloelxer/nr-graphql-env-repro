@@ -1,17 +1,45 @@
-const numberOfWorkers = process.env.WEB_CONCURRENCY || 1;
 
-import express from 'express';
-import cookieParser from 'cookie-parser';
-// import path from 'path';
-import bodyParser from 'body-parser';
-import helmet from 'helmet';
-import useragent from 'express-useragent';
-import throng from 'throng';
-import nrGraphQLPlugin from '@newrelic/apollo-server-plugin';
+
+require('dotenv').config();
+
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const helmet = require('helmet');
+
+const useragent = require('express-useragent');
+const throng = require('throng');
+const nrGraphQLPlugin = require('@newrelic/apollo-server-plugin');
+const { ApolloServer, gql } = require('apollo-server-express');
+const { makeExecutableSchema } = require('graphql-tools');
+const newrelic = require('newrelic');
+
+const numberOfWorkers = process.env.WEB_CONCURRENCY || 1;
 // import httpsRedirect from 'express-https-redirect';
 // import session from 'express-session';
 
-// we use throng to cluster our node.js processes (), which is just a wrapper our the Node Cluster API
+const makeGQLSchema = () => {
+  const resolvers = {
+    Query: {
+      mockQuery: () => {},
+    },
+  }
+  const queries = gql`
+    type Query {
+      "Get user details"
+      mockQuery: String
+    }
+  `;
+
+  return makeExecutableSchema({
+    typeDefs: [
+      queries,
+    ],
+    resolvers: [
+      resolvers,
+    ],
+  });
+}
 
 const startProcess = async () => {
      // Set up Express
@@ -39,7 +67,7 @@ const startProcess = async () => {
   //app.use('/', ServeSiteRoutes);
 
   const apolloServer = new ApolloServer({
-    schema,
+    schema: makeGQLSchema(),
     engine: {
       apiKey: process.env.APOLLO_KEY,
       graphVariant: process.env.APOLLO_GRAPH_VARIANT || 'current',
@@ -54,12 +82,13 @@ const startProcess = async () => {
   apolloServer.applyMiddleware({ app, path: '/graphql' });
 
   // Catchall for React HTML
-  app.get('*', serveReact);
+  // app.get('*', serveReact);
 
 
   console.log(`Hello world`)
 }
 
+// we use throng to cluster our node.js processes (), which is just a wrapper our the Node Cluster API
 throng({
     worker: startProcess,
     liftime: Infinity,
