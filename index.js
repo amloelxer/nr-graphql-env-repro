@@ -15,6 +15,8 @@ const useragent = require('express-useragent');
 // GraphQL imports
 const { ApolloServer, gql } = require('apollo-server-express');
 const { makeExecutableSchema } = require('graphql-tools');
+const { SubscriptionServer } = require('subscriptions-transport-ws');
+const { execute, subscribe } = require('graphql');
 
 const throng = require('throng');
 const numberOfWorkers = process.env.WEB_CONCURRENCY || 1;
@@ -86,7 +88,7 @@ const startProcess = async () => {
   // Setup graphql subscriptions
   SubscriptionServer.create(
     {
-      schema,
+      schema: makeGQLSchema(),
       execute,
       subscribe,
       keepAlive: 10 * 1000,
