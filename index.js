@@ -1,27 +1,30 @@
-
-
 require('dotenv').config();
 
+// New relic
+const newrelic = require('newrelic');
+const nrGraphQLPlugin = require('@newrelic/apollo-server-plugin');
+
+// Express imports
+const { createServer } = require('http');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-
 const useragent = require('express-useragent');
-const throng = require('throng');
-const nrGraphQLPlugin = require('@newrelic/apollo-server-plugin');
+
+// GraphQL imports
 const { ApolloServer, gql } = require('apollo-server-express');
 const { makeExecutableSchema } = require('graphql-tools');
-const newrelic = require('newrelic');
 
+const throng = require('throng');
 const numberOfWorkers = process.env.WEB_CONCURRENCY || 1;
-// import httpsRedirect from 'express-https-redirect';
-// import session from 'express-session';
 
 const makeGQLSchema = () => {
   const resolvers = {
     Query: {
-      mockQuery: () => {},
+      mockQuery: () => {
+        return "Hello World"
+      },
     },
   }
   const queries = gql`
@@ -42,7 +45,7 @@ const makeGQLSchema = () => {
 }
 
 const startProcess = async () => {
-     // Set up Express
+  // Set up Express
   const app = express();
   app.use(cookieParser());
 
@@ -58,13 +61,11 @@ const startProcess = async () => {
 
   app.use(useragent.express());
 
-    // use for handling sessions
-//   app.set('trust proxy', 1);
-//   const sessionHandler = session(sess);
-//   app.use(sessionHandler);
-
-  // we server our static files at / 
+  // we server our static files at "/"
   //app.use('/', ServeSiteRoutes);
+
+  // Catchall for React HTML
+  // app.get('*', serveReact);
 
   const apolloServer = new ApolloServer({
     schema: makeGQLSchema(),
@@ -80,15 +81,32 @@ const startProcess = async () => {
   });
 
   apolloServer.applyMiddleware({ app, path: '/graphql' });
+  const server = createServer(app);
 
-  // Catchall for React HTML
-  // app.get('*', serveReact);
+  // Setup graphql subscriptions
+  SubscriptionServer.create(
+    {
+      schema,
+      execute,
+      subscribe,
+      keepAlive: 10 * 1000,
+      onConnect: (connectionParams, webSocket, context) => {
+        // do basic auth for subscription server here
+      },
+    },
+    {
+      server: server,
+      path: '/subscriptions',
+    },
+  );
 
-
-  console.log(`Hello world`)
+  const portNumber = 3001
+  server.listen(portNumber, () => {
+    console.log(`server running at at port: ${portNumber}`)
+  });
 }
 
-// we use throng to cluster our node.js processes (), which is just a wrapper our the Node Cluster API
+// we use throng to cluster our node.js processes (), which is just a wrapper around the Node Cluster API
 throng({
     worker: startProcess,
     liftime: Infinity,
